@@ -26,6 +26,7 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         debug: true
+        use_insecure_cipher: true
         script: |
           # Create directory if it doesn't exist
           mkdir -p /home/ec2-user/data
