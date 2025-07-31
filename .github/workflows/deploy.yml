@@ -37,7 +37,7 @@ jobs:
           git clone ${{ secrets.REPOSITORY_URL }} .
           
           # Sync the contents to the destination directory (excluding .git)
-          rsync -av --delete --exclude='.git' --exclude='.github' ./ /home/user1/data/
+          rsync -av --delete --exclude='.git' --exclude='.github' ./ /home/ec2-user/data/
           
           # Cleanup
           cd /
