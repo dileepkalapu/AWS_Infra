@@ -19,28 +19,30 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
         
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@master
+    - name: Install SSH key
+      uses: shimataro/ssh-key-action@v2
       with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
-        debug: true
-        use_insecure_cipher: true
-        script: |
-          # Create directory if it doesn't exist
-          mkdir -p /home/ec2-user/data
-          
-          # Create a temporary directory for the deployment
-          TEMP_DIR=$(mktemp -d)
-          cd $TEMP_DIR
-          
-          # Clone the repository using configurable URL
-          git clone ${{ secrets.REPOSITORY_URL }} .
-          
-          # Sync the contents to the destination directory (excluding .git)
-          rsync -av --delete --exclude='.git' --exclude='.github' ./ /home/ec2-user/data/
-          
-          # Cleanup
-          cd /
-          rm -rf $TEMP_DIR
+        known_hosts: unnecessary
+        if_key_exists: replace
+
+    - name: Adding Known Hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy with rsync
+      run: |
+        # Create the deploy script
+        echo "#!/bin/bash
+        mkdir -p /home/ec2-user/data
+        cd /home/ec2-user/data
+        git clone ${{ secrets.REPOSITORY_URL }} .
+        " > deploy.sh
+        
+        # Make the script executable
+        chmod +x deploy.sh
+        
+        # Copy the script and execute it
+        scp deploy.sh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:~/deploy.sh
+        ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} './deploy.sh'
