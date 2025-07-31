@@ -27,7 +27,7 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           # Create directory if it doesn't exist
-          mkdir -p /home/user1/data
+          mkdir -p /home/ec2-user/data
           
           # Create a temporary directory for the deployment
           TEMP_DIR=$(mktemp -d)
